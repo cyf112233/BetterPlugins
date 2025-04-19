@@ -9,8 +9,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    outputs:  # 定义输出变量供后续任务使用
+      tag_name: ${{ steps.timestamp.outputs.TAG_NAME }}
+      build_date: ${{ steps.timestamp.outputs.BUILD_DATE }}
 
     steps:
     - uses: actions/checkout@v4
@@ -22,13 +23,16 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # 生成时间戳标签 (格式 v2023_12_25__08_30_45)
-    - name: Generate Timestamp Tag
+    # 生成时间戳变量（核心时间源）
+    - name: Generate Timestamp
+      id: timestamp
       run: |
-        CURRENT_TIME=$(date -u +"%Y_%m_%d__%H_%M_%S")
-        echo "TAG_NAME=v$CURRENT_TIME" >> $GITHUB_ENV
+        TAG_NAME="v$(date -u +'%Y_%m_%d__%H_%M_%S')"
+        BUILD_DATE=$(date -u +'%Y-%m-%d %H:%M:%S UTC')
+        echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_OUTPUT
+        echo "BUILD_DATE=${BUILD_DATE}" >> $GITHUB_OUTPUT
 
-    # 准备构建环境
+    # 构建环境准备
     - name: Change gradlew permissions
       run: chmod +x ./gradlew
 
@@ -43,38 +47,56 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
 
-    # 构建项目
+    # 执行构建
     - name: Build with Gradle
       run: ./gradlew build
 
-    # 上传构建产物（使用仓库名命名）
-    - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ github.event.repository.name }}-build  # 如 "myrepo-build"
-        path: build/libs/*
+  publish-release:
+    needs: build  # 依赖 build 任务
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 发布 Release 所需权限
 
-    # 创建时间戳标签
-    - name: Create Timestamp Tag
+    steps:
+    - uses: actions/checkout@v4
+
+    # 创建 Git 标签
+    - name: Create Tag
+      env:
+        TAG_NAME: ${{ needs.build.outputs.tag_name }}
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
-        git tag ${{ env.TAG_NAME }}
-        git push origin ${{ env.TAG_NAME }}
+        git tag ${TAG_NAME}
+        git push origin ${TAG_NAME}
 
-    # 创建 Release（使用仓库名作为 Release 名称）
+    # 发布 GitHub Release
     - name: Create Release
       uses: softprops/action-gh-release@v1
+      env:
+        TAG_NAME: ${{ needs.build.outputs.tag_name }}
+        BUILD_DATE: ${{ needs.build.outputs.build_date }}
       with:
         tag_name: ${{ env.TAG_NAME }}
-        name: ${{ github.event.repository.name }}  # 仅显示仓库名
+        name: ${{ github.event.repository.name }}
         body: |
           🚀 Automated Release
           - Build Tag: **${{ env.TAG_NAME }}**
+          - Build Date: **${{ env.BUILD_DATE }}**
           - Commit SHA: `${{ github.sha }}`
-          - Build Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
         draft: false
         files: build/libs/*
+
+  upload-artifact:
+    needs: build  # 依赖 build 任务
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ github.event.repository.name }}-build
+        path: build/libs/*
 
   dependency-submission:
     needs: build
