@@ -15,9 +15,6 @@ on:
        - "v*.*.*"
   pull_request:
     branches: [ "main" ]
-permissions:
-  contents: write
- 
 
 jobs:
   build:
@@ -53,7 +50,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: build/libs/*
-        draft: true
+        draft: false
         fail_on_unmatched_files: true
     # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
     # If your project does not have the Gradle Wrapper configured, you can use the following configuration to run Gradle with a specified version.
