@@ -1,81 +1,84 @@
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-# This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
-
 name: Java CI with Gradle
 
 on:
   push:
     branches: [ "main" ]
-    tags:
-       - "v*.*.*"
   pull_request:
     branches: [ "main" ]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
     - uses: actions/checkout@v4
+
+    # 设置 JDK 环境
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
-    - name: Change wrapper permissions
+
+    # 生成时间戳标签 (格式 v2023_12_25__08_30_45)
+    - name: Generate Timestamp Tag
+      run: |
+        CURRENT_TIME=$(date -u +"%Y_%m_%d__%H_%M_%S")
+        echo "TAG_NAME=v$CURRENT_TIME" >> $GITHUB_ENV
+
+    # 准备构建环境
+    - name: Change gradlew permissions
       run: chmod +x ./gradlew
 
-    # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
-    # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
 
-      
-    - name: Build with Gradle Wrapper
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+
+    # 构建项目
+    - name: Build with Gradle
       run: ./gradlew build
 
-    - name: update
+    # 上传构建产物（使用仓库名命名）
+    - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: "build"
-        path: build/libs/
+        name: ${{ github.event.repository.name }}-build  # 如 "myrepo-build"
+        path: build/libs/*
 
-    - name: Tag
+    # 创建时间戳标签
+    - name: Create Timestamp Tag
       run: |
-        git tag "v$env:GitVersion_SemVer"
-        git push origin "v$env:GitVersion_SemVer"
-    - name: Release
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git tag ${{ env.TAG_NAME }}
+        git push origin ${{ env.TAG_NAME }}
+
+    # 创建 Release（使用仓库名作为 Release 名称）
+    - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        files: build/libs/*
+        tag_name: ${{ env.TAG_NAME }}
+        name: ${{ github.event.repository.name }}  # 仅显示仓库名
+        body: |
+          🚀 Automated Release
+          - Build Tag: **${{ env.TAG_NAME }}**
+          - Commit SHA: `${{ github.sha }}`
+          - Build Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
         draft: false
-        release_name: ${{ github.repository }}
-        fail_on_unmatched_files: true
-    # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
-    # If your project does not have the Gradle Wrapper configured, you can use the following configuration to run Gradle with a specified version.
-    #
-    # - name: Setup Gradle
-    #   uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
-    #   with:
-    #     gradle-version: '8.9'
-    #
-    # - name: Build with Gradle 8.9
-    #   run: gradle build
+        files: build/libs/*
 
   dependency-submission:
-
+    needs: build
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
     steps:
     - uses: actions/checkout@v4
     - name: Set up JDK 17
@@ -83,8 +86,5 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-
-    # Generates and submits a dependency graph, enabling Dependabot Alerts for all project dependencies.
-    # See: https://github.com/gradle/actions/blob/main/dependency-submission/README.md
-    - name: Generate and submit dependency graph
-      uses: gradle/actions/dependency-submission@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+    - name: Submit dependencies
+      uses: gradle/actions/dependency-submission@v4
