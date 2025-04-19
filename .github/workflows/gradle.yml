@@ -14,12 +14,23 @@ on:
   pull_request:
     branches: [ "main" ]
 
+name: Release
+ 
+ on:
+   push:
+     tags:
+       - "v*.*.*"
+ 
+ permissions:
+   contents: write
+ 
+
 jobs:
   build:
 
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
 
     steps:
     - uses: actions/checkout@v4
@@ -50,8 +61,6 @@ jobs:
         files: build/libs/*
         draft: true
         fail_on_unmatched_files: true
-      permissions:
-        contents: write
     # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
     # If your project does not have the Gradle Wrapper configured, you can use the following configuration to run Gradle with a specified version.
     #
