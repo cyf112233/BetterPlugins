@@ -9,30 +9,25 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:  # 定义输出变量供后续任务使用
-      tag_name: ${{ steps.timestamp.outputs.TAG_NAME }}
-      build_date: ${{ steps.timestamp.outputs.BUILD_DATE }}
+    permissions:
+      contents: write
 
     steps:
     - uses: actions/checkout@v4
 
-    # 设置 JDK 环境
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
 
-    # 生成时间戳变量（核心时间源）
     - name: Generate Timestamp
-      id: timestamp
       run: |
         TAG_NAME="v$(date -u +'%Y_%m_%d__%H_%M_%S')"
         BUILD_DATE=$(date -u +'%Y-%m-%d %H:%M:%S UTC')
-        echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_OUTPUT
-        echo "BUILD_DATE=${BUILD_DATE}" >> $GITHUB_OUTPUT
+        echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
+        echo "BUILD_DATE=${BUILD_DATE}" >> $GITHUB_ENV
 
-    # 构建环境准备
     - name: Change gradlew permissions
       run: chmod +x ./gradlew
 
@@ -47,66 +42,30 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
 
-    # 执行构建
     - name: Build with Gradle
       run: ./gradlew build
 
-  publish-release:
-    needs: build  # 依赖 build 任务
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write  # 发布 Release 所需权限
-
-    steps:
-    - uses: actions/checkout@v4
-
-    # 创建 Git 标签
-    - name: Create Tag
-      env:
-        TAG_NAME: ${{ needs.build.outputs.tag_name }}
-      run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        git tag ${TAG_NAME}
-        git push origin ${TAG_NAME}
-
-    # 发布 GitHub Release
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
-      env:
-        TAG_NAME: ${{ needs.build.outputs.tag_name }}
-        BUILD_DATE: ${{ needs.build.outputs.build_date }}
-      with:
-        tag_name: ${{ env.TAG_NAME }}
-        name: ${{ github.event.repository.name }}
-        body: |
-          🚀 Automated Release
-          - Build Tag: **${{ env.TAG_NAME }}**
-          - Build Date: **${{ env.BUILD_DATE }}**
-          - Commit SHA: `${{ github.sha }}`
-        draft: false
-        files: build/libs/*
-
-  upload-artifact:
-    needs: build  # 依赖 build 任务
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Upload Build Artifacts
+    - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: ${{ github.event.repository.name }}-build
         path: build/libs/*
 
-  dependency-submission:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
+    - name: Create Tag
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git tag ${{ env.TAG_NAME }}
+        git push origin ${{ env.TAG_NAME }}
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
       with:
-        java-version: '17'
-        distribution: 'temurin'
-    - name: Submit dependencies
-      uses: gradle/actions/dependency-submission@v4
+        tag_name: ${{ env.TAG_NAME }}
+        name: ${{ github.event.repository.name }}
+        body: |
+          🚀 自动化构建发布
+          - 构建时间：**${{ env.BUILD_DATE }}**
+          - 提交哈希：`${{ github.sha }}`
+        draft: false
+        files: build/libs/*
