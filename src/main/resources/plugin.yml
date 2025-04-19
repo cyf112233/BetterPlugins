@@ -1,0 +1,16 @@
+name: BetterPlugins
+version: '${version}'
+main: top.cxkcxkckx.plugins.plugins
+api-version: 1.13
+depend: [  ]
+softdepend: [ PlaceholderAPI ]
+authors: [ cxkcxkckx ]
+commands:
+  pl:
+    description: 显示插件列表
+    aliases: [plugins]
+    priority: HIGHEST
+  plf:
+    description: 按首字母筛选插件
+  pli:
+    description: 查看插件详细信息

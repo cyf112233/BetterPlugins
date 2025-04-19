@@ -1,0 +1,113 @@
+package top.cxkcxkckx.plugins.commands;
+
+import net.md_5.bungee.api.chat.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
+import top.mrxiaom.pluginbase.func.AutoRegister;
+import top.cxkcxkckx.plugins.plugins;
+import top.cxkcxkckx.plugins.func.AbstractModule;
+
+import java.util.List;
+
+@AutoRegister
+public class CommandInfo extends AbstractModule implements CommandExecutor {
+    public CommandInfo(plugins plugin) {
+        super(plugin);
+        registerCommand("pli", this);
+    }
+
+    @Override
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+        // 检查插件是否启用
+        if (!plugin.isPluginEnabled()) {
+            sender.sendMessage("§c插件已被禁用，请检查配置文件");
+            return true;
+        }
+
+        if (args.length < 1) {
+            sender.sendMessage("§c用法: /pli <插件名>");
+            return true;
+        }
+
+        String pluginName = args[0];
+        Plugin targetPlugin = plugin.getServer().getPluginManager().getPlugin(pluginName);
+
+        if (targetPlugin == null) {
+            sender.sendMessage("§c未找到插件: " + pluginName);
+            return true;
+        }
+
+        // 检查是否安装了PlugMan
+        boolean hasPlugMan = plugin.getServer().getPluginManager().getPlugin("PlugMan") != null;
+
+        // 获取插件信息
+        String name = targetPlugin.getName();
+        String version = targetPlugin.getDescription().getVersion();
+        String description = targetPlugin.getDescription().getDescription();
+        String mainClass = targetPlugin.getDescription().getMain();
+        List<String> authors = targetPlugin.getDescription().getAuthors();
+        String website = targetPlugin.getDescription().getWebsite();
+        String apiVersion = targetPlugin.getDescription().getAPIVersion();
+        List<String> dependencies = targetPlugin.getDescription().getDepend();
+        List<String> softDependencies = targetPlugin.getDescription().getSoftDepend();
+        List<String> loadBefore = targetPlugin.getDescription().getLoadBefore();
+        String status = targetPlugin.isEnabled() ? "§a已启用" : "§c已禁用";
+
+        // 清屏效果
+        for (int i = 0; i < 20; i++) {
+            sender.sendMessage("");
+        }
+
+        // 创建消息
+        ComponentBuilder message = new ComponentBuilder("§8┌─────────────────────────────────┐\n");
+        message.append(new TextComponent("§6插件信息:\n"));
+        message.append(new TextComponent("§7名称: §f" + name + "\n"));
+        message.append(new TextComponent("§7版本: §f" + version + "\n"));
+        message.append(new TextComponent("§7作者: §f" + authors + "\n"));
+        message.append(new TextComponent("§7描述: §f" + description + "\n"));
+        message.append(new TextComponent("§7状态: " + status + "\n"));
+
+        // 如果安装了PlugMan，添加管理按钮
+        if (hasPlugMan && sender.hasPermission("plugman.use")) {
+            ComponentBuilder buttons = new ComponentBuilder("§7管理: ");
+
+            // 启用按钮
+            TextComponent enable = new TextComponent("§a[启用] ");
+            enable.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/plugman enable " + name));
+            enable.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                new ComponentBuilder("§7点击启用插件").create()));
+            buttons.append(enable);
+
+            // 禁用按钮
+            TextComponent disable = new TextComponent("§c[禁用] ");
+            disable.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/plugman disable " + name));
+            disable.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                new ComponentBuilder("§7点击禁用插件").create()));
+            buttons.append(disable);
+
+            // 重载按钮
+            TextComponent reload = new TextComponent("§e[重载]");
+            reload.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/plugman reload " + name));
+            reload.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                new ComponentBuilder("§7点击重载插件").create()));
+            buttons.append(reload);
+
+            message.append(buttons.create());
+        }
+
+        // 添加返回按钮
+        message.append(new TextComponent("\n§7返回: "));
+        TextComponent back = new TextComponent("§e[插件列表]");
+        back.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pl"));
+        back.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+            new ComponentBuilder("§7点击返回插件列表").create()));
+        message.append(back);
+
+        message.append(new TextComponent("\n§8└─────────────────────────────────┘"));
+        sender.spigot().sendMessage(message.create());
+        return true;
+    }
+} 
