@@ -41,17 +41,7 @@ jobs:
       
     - name: Build with Gradle Wrapper
       run: ./gradlew build
-    - name: update
-      uses: actions/upload-artifact@v4
-      with:
-        name: "BetterPlugins"
-        path: build/libs/
-    - name: Release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: build/libs/*
-        draft: false
-        fail_on_unmatched_files: true
+
     # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
     # If your project does not have the Gradle Wrapper configured, you can use the following configuration to run Gradle with a specified version.
     #
@@ -81,3 +71,31 @@ jobs:
     # See: https://github.com/gradle/actions/blob/main/dependency-submission/README.md
     - name: Generate and submit dependency graph
       uses: gradle/actions/dependency-submission@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+
+  update:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    - name: update
+      uses: actions/upload-artifact@v4
+      with:
+        name: "BetterPlugins"
+        path: build/libs/
+
+  
+  Release:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: build/libs/*
+        draft: false
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
+        fail_on_unmatched_files: true
