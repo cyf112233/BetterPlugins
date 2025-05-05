@@ -23,12 +23,12 @@ public class CommandInfo extends AbstractModule implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         // 检查插件是否启用
         if (!plugin.isPluginEnabled()) {
-            sender.sendMessage("§c插件已被禁用，请检查配置文件");
+            sender.sendMessage(plugin.getLanguageManager().getMessage("plugin-disabled"));
             return true;
         }
 
         if (args.length < 1) {
-            sender.sendMessage("§c用法: /pli <插件名>");
+            sender.sendMessage(plugin.getLanguageManager().getMessage("usage-pli"));
             return true;
         }
 
@@ -36,7 +36,7 @@ public class CommandInfo extends AbstractModule implements CommandExecutor {
         Plugin targetPlugin = plugin.getServer().getPluginManager().getPlugin(pluginName);
 
         if (targetPlugin == null) {
-            sender.sendMessage("§c未找到插件: " + pluginName);
+            sender.sendMessage(plugin.getLanguageManager().getMessage("plugin-not-found", pluginName));
             return true;
         }
 
@@ -49,12 +49,15 @@ public class CommandInfo extends AbstractModule implements CommandExecutor {
         String description = targetPlugin.getDescription().getDescription();
         String mainClass = targetPlugin.getDescription().getMain();
         List<String> authors = targetPlugin.getDescription().getAuthors();
+        String authorsStr = authors != null && !authors.isEmpty() ? String.join(", ", authors) : plugin.getLanguageManager().getMessage("unknown");
         String website = targetPlugin.getDescription().getWebsite();
         String apiVersion = targetPlugin.getDescription().getAPIVersion();
         List<String> dependencies = targetPlugin.getDescription().getDepend();
         List<String> softDependencies = targetPlugin.getDescription().getSoftDepend();
         List<String> loadBefore = targetPlugin.getDescription().getLoadBefore();
-        String status = targetPlugin.isEnabled() ? "§a已启用" : "§c已禁用";
+        String status = targetPlugin.isEnabled() ? 
+            plugin.getLanguageManager().getMessage("plugin-info-status-enabled") : 
+            plugin.getLanguageManager().getMessage("plugin-info-status-disabled");
 
         // 清屏效果
         for (int i = 0; i < 20; i++) {
@@ -65,44 +68,41 @@ public class CommandInfo extends AbstractModule implements CommandExecutor {
         ComponentBuilder message = new ComponentBuilder();
         
         // 添加顶部边框
-        TextComponent topBorder = new TextComponent("§8┌─────────────────────────────────┐");
-        topBorder.setClickEvent(null);
-        topBorder.setHoverEvent(null);
-        sender.spigot().sendMessage(topBorder);
+        plugin.getMessageHelper().sendTopBorder(sender);
         
         // 添加标题
-        TextComponent title = new TextComponent("§6插件信息:");
+        TextComponent title = new TextComponent(plugin.getLanguageManager().getMessage("plugin-info-title"));
         title.setClickEvent(null);
         title.setHoverEvent(null);
         message.append(title);
         message.append("\n");
         
         // 添加插件信息
-        TextComponent nameComponent = new TextComponent("§7名称: §f" + name);
+        TextComponent nameComponent = new TextComponent(plugin.getLanguageManager().getMessage("plugin-info-name", name != null ? name : plugin.getLanguageManager().getMessage("unknown")));
         nameComponent.setClickEvent(null);
         nameComponent.setHoverEvent(null);
         message.append(nameComponent);
         message.append("\n");
         
-        TextComponent versionComponent = new TextComponent("§7版本: §f" + version);
+        TextComponent versionComponent = new TextComponent(plugin.getLanguageManager().getMessage("plugin-info-version", version != null ? version : plugin.getLanguageManager().getMessage("unknown")));
         versionComponent.setClickEvent(null);
         versionComponent.setHoverEvent(null);
         message.append(versionComponent);
         message.append("\n");
         
-        TextComponent authorComponent = new TextComponent("§7作者: §f" + authors);
+        TextComponent authorComponent = new TextComponent(plugin.getLanguageManager().getMessage("plugin-info-author", authorsStr));
         authorComponent.setClickEvent(null);
         authorComponent.setHoverEvent(null);
         message.append(authorComponent);
         message.append("\n");
         
-        TextComponent descComponent = new TextComponent("§7描述: §f" + description);
+        TextComponent descComponent = new TextComponent(plugin.getLanguageManager().getMessage("plugin-info-description", description != null ? description : plugin.getLanguageManager().getMessage("unknown")));
         descComponent.setClickEvent(null);
         descComponent.setHoverEvent(null);
         message.append(descComponent);
         message.append("\n");
         
-        TextComponent statusText = new TextComponent("§7状态: " + status);
+        TextComponent statusText = new TextComponent(plugin.getLanguageManager().getMessage("plugin-info-status", status));
         statusText.setClickEvent(null);
         statusText.setHoverEvent(null);
         message.append(statusText);
@@ -111,77 +111,55 @@ public class CommandInfo extends AbstractModule implements CommandExecutor {
         // 如果安装了PlugMan，添加管理按钮
         if (hasPlugMan && sender.hasPermission("plugman.use")) {
             // 添加管理标签
-            TextComponent manageLabel = new TextComponent("§7管理: ");
-            manageLabel.setClickEvent(null);
-            manageLabel.setHoverEvent(null);
-            message.append(manageLabel);
+            message.append(plugin.getMessageHelper().getManageLabel());
 
             // 添加隔离组件
-            TextComponent separator = new TextComponent("");
-            separator.setClickEvent(null);
-            separator.setHoverEvent(null);
-            message.append(separator);
+            message.append(plugin.getMessageHelper().getSeparator());
 
             // 启用按钮
-            TextComponent enable = new TextComponent("§a[启用] ");
+            TextComponent enable = new TextComponent(plugin.getLanguageManager().getMessage("button-enable"));
             enable.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/plugman enable " + name));
             enable.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                new ComponentBuilder("§7点击启用插件").create()));
+                new ComponentBuilder(plugin.getLanguageManager().getMessage("click-to-enable")).create()));
             message.append(enable);
 
             // 添加隔离组件
-            separator = new TextComponent("");
-            separator.setClickEvent(null);
-            separator.setHoverEvent(null);
-            message.append(separator);
+            message.append(plugin.getMessageHelper().getSeparator());
 
             // 禁用按钮
-            TextComponent disable = new TextComponent("§c[禁用] ");
+            TextComponent disable = new TextComponent(plugin.getLanguageManager().getMessage("button-disable"));
             disable.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/plugman disable " + name));
             disable.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                new ComponentBuilder("§7点击禁用插件").create()));
+                new ComponentBuilder(plugin.getLanguageManager().getMessage("click-to-disable")).create()));
             message.append(disable);
 
             // 添加隔离组件
-            separator = new TextComponent("");
-            separator.setClickEvent(null);
-            separator.setHoverEvent(null);
-            message.append(separator);
+            message.append(plugin.getMessageHelper().getSeparator());
 
             // 重载按钮
-            TextComponent reload = new TextComponent("§e[重载]");
+            TextComponent reload = new TextComponent(plugin.getLanguageManager().getMessage("button-reload"));
             reload.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/plugman reload " + name));
             reload.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                new ComponentBuilder("§7点击重载插件").create()));
+                new ComponentBuilder(plugin.getLanguageManager().getMessage("click-to-reload")).create()));
             message.append(reload);
             message.append("\n");
         }
 
         // 添加返回按钮
-        TextComponent returnLabel = new TextComponent("§7返回: ");
-        returnLabel.setClickEvent(null);
-        returnLabel.setHoverEvent(null);
-        message.append(returnLabel);
+        message.append(plugin.getMessageHelper().getBackLabel());
 
         // 添加隔离组件
-        TextComponent separator = new TextComponent("");
-        separator.setClickEvent(null);
-        separator.setHoverEvent(null);
-        message.append(separator);
+        message.append(plugin.getMessageHelper().getSeparator());
 
-        TextComponent back = new TextComponent("§e[插件列表]");
-        back.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pl"));
-        back.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-            new ComponentBuilder("§7点击返回插件列表").create()));
-        message.append(back);
+        // 添加返回按钮
+        message.append(plugin.getMessageHelper().getBackButton());
         message.append("\n");
 
-        // 添加底部边框
-        TextComponent bottomBorder = new TextComponent("§8└─────────────────────────────────┘");
-        bottomBorder.setClickEvent(null);
-        bottomBorder.setHoverEvent(null);
-        message.append(bottomBorder);
+        // 发送消息内容
         sender.spigot().sendMessage(message.create());
+
+        // 添加底部边框
+        plugin.getMessageHelper().sendBottomBorder(sender);
         return true;
     }
 } 

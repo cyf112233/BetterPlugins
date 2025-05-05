@@ -1,9 +1,17 @@
+# Plugin Configuration File
 # 插件配置文件
 
+# Whether to enable plugin features
 # 是否启用插件功能
 enabled: true
 
+# Language settings (zh_CN or en_US)
+# 语言设置 (zh_CN 或 en_US)
+language: en_US
+
+# Plugin Settings
 # 插件设置
 settings:
+  # Whether to show plugin management buttons (requires PlugMan)
   # 是否显示插件管理按钮（需要PlugMan）
   show_management_buttons: true 

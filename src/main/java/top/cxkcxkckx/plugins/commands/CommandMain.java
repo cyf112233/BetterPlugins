@@ -28,7 +28,7 @@ public class CommandMain extends AbstractModule implements CommandExecutor, TabC
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         // 检查插件是否启用
         if (!plugin.isPluginEnabled()) {
-            sender.sendMessage("§c插件已被禁用，请检查配置文件");
+            sender.sendMessage(plugin.getLanguageManager().getMessage("plugin-disabled"));
             return true;
         }
         
@@ -49,7 +49,7 @@ public class CommandMain extends AbstractModule implements CommandExecutor, TabC
             }
             
             if (matches.isEmpty()) {
-                sender.sendMessage("§c未找到匹配的插件");
+                sender.sendMessage(plugin.getLanguageManager().getMessage("plugin-not-found", search));
                 return true;
             }
             
@@ -77,24 +77,24 @@ public class CommandMain extends AbstractModule implements CommandExecutor, TabC
             }
             
             // 显示搜索结果标题
-            sender.sendMessage("§6搜索结果 (" + matches.size() + "):");
+            sender.sendMessage(plugin.getLanguageManager().getMessage("plugin-search-title", matches.size()));
             
             // 创建插件数量统计消息
-            TextComponent statsText = new TextComponent("§7插件总数: §f" + matches.size() + " §8| §a已启用: §f" + enabledCount + " §8| §c已禁用: §f" + disabledCount);
-            statsText.setClickEvent(null);
-            statsText.setHoverEvent(null);
-            sender.spigot().sendMessage(statsText);
+            sender.spigot().sendMessage(plugin.getMessageHelper().getStatsText(
+                matches.size(), enabledCount, disabledCount));
             
             // 显示插件列表
             for (Plugin p : matches) {
-                String status = p.isEnabled() ? "§a已启用" : "§c已禁用";
+                String status = p.isEnabled() ? 
+                    plugin.getLanguageManager().getMessage("plugin-info-status-enabled") : 
+                    plugin.getLanguageManager().getMessage("plugin-info-status-disabled");
                 
                 // 创建插件名称的点击组件
                 TextComponent nameComponent = new TextComponent(p.getName());
                 nameComponent.setColor(p.isEnabled() ? net.md_5.bungee.api.ChatColor.GREEN : net.md_5.bungee.api.ChatColor.RED);
                 nameComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pli " + p.getName()));
                 nameComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
-                    new ComponentBuilder("§7点击查看插件信息").create()));
+                    new ComponentBuilder(plugin.getLanguageManager().getMessage("click-to-view")).create()));
                 
                 // 创建完整消息
                 ComponentBuilder message = new ComponentBuilder("§7- ");
@@ -109,17 +109,17 @@ public class CommandMain extends AbstractModule implements CommandExecutor, TabC
         if (args.length == 1) {
             if (args[0].equalsIgnoreCase("reload")) {
                 if (!sender.hasPermission("plugins.reload")) {
-                    return t(sender, "§c你没有权限使用此命令");
+                    return t(sender, plugin.getLanguageManager().getMessage("no-permission"));
                 }
                 plugin.reloadConfig();
-                return t(sender, "§a配置已重载");
+                return t(sender, plugin.getLanguageManager().getMessage("config-reloaded"));
             }
             if (args[0].equalsIgnoreCase("list")) {
                 return showPluginList(sender);
             }
         }
         
-        return t(sender, "§c用法: /pl [list|reload]");
+        return t(sender, plugin.getLanguageManager().getMessage("usage-pl"));
     }
 
     private static final List<String> emptyList = Lists.newArrayList();
@@ -150,7 +150,7 @@ public class CommandMain extends AbstractModule implements CommandExecutor, TabC
             sender.sendMessage("");
         }
         
-        sender.sendMessage("§6已安装的插件:");
+        sender.sendMessage(plugin.getLanguageManager().getMessage("plugin-list-title"));
         List<Plugin> plugins = Arrays.asList(plugin.getServer().getPluginManager().getPlugins());
         
         // 按首字母排序
@@ -159,25 +159,6 @@ public class CommandMain extends AbstractModule implements CommandExecutor, TabC
             char c2 = p2.getName().toLowerCase().charAt(0);
             return Character.compare(c1, c2);
         });
-        
-        // 显示所有插件
-        for (Plugin p : plugins) {
-            String status = p.isEnabled() ? "§a已启用" : "§c已禁用";
-            
-            // 创建插件名称的点击组件
-            TextComponent nameComponent = new TextComponent(p.getName());
-            nameComponent.setColor(p.isEnabled() ? net.md_5.bungee.api.ChatColor.GREEN : net.md_5.bungee.api.ChatColor.RED);
-            nameComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pli " + p.getName()));
-            nameComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
-                new ComponentBuilder("§7点击查看插件信息").create()));
-            
-            // 创建完整消息
-            ComponentBuilder message = new ComponentBuilder("§7- ");
-            message.append(nameComponent);
-            message.append(" §8v" + p.getDescription().getVersion() + " §8| " + status);
-            
-            sender.spigot().sendMessage(message.create());
-        }
 
         // 添加插件数量统计
         int enabledCount = 0;
@@ -190,23 +171,39 @@ public class CommandMain extends AbstractModule implements CommandExecutor, TabC
             }
         }
         
+        // 显示所有插件
+        for (Plugin p : plugins) {
+            String status = p.isEnabled() ? 
+                plugin.getLanguageManager().getMessage("plugin-info-status-enabled") : 
+                plugin.getLanguageManager().getMessage("plugin-info-status-disabled");
+            
+            // 创建插件名称的点击组件
+            TextComponent nameComponent = new TextComponent(p.getName());
+            nameComponent.setColor(p.isEnabled() ? net.md_5.bungee.api.ChatColor.GREEN : net.md_5.bungee.api.ChatColor.RED);
+            nameComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pli " + p.getName()));
+            nameComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
+                new ComponentBuilder(plugin.getLanguageManager().getMessage("click-to-view")).create()));
+            
+            // 创建完整消息
+            ComponentBuilder message = new ComponentBuilder("§7- ");
+            message.append(nameComponent);
+            message.append(" §8v" + p.getDescription().getVersion() + " §8| " + status);
+            
+            sender.spigot().sendMessage(message.create());
+        }
+
         // 创建插件数量统计消息
-        TextComponent statsText = new TextComponent("§7插件总数: §f" + plugins.size() + " §8| §a已启用: §f" + enabledCount + " §8| §c已禁用: §f" + disabledCount);
-        statsText.setClickEvent(null);
-        statsText.setHoverEvent(null);
-        sender.spigot().sendMessage(statsText);
+        sender.spigot().sendMessage(plugin.getMessageHelper().getStatsText(
+            plugins.size(), enabledCount, disabledCount));
 
         // 创建字母索引
         ComponentBuilder indexBuilder = new ComponentBuilder();
         
         // 添加顶部边框
-        TextComponent topBorder = new TextComponent("§8┌─────────────────────────────────┐");
-        topBorder.setClickEvent(null);
-        topBorder.setHoverEvent(null);
-        sender.spigot().sendMessage(topBorder);
+        plugin.getMessageHelper().sendTopBorder(sender);
         
         // 第一行：A-O
-        TextComponent indexLabel = new TextComponent("§8│ §a索引§a: ");
+        TextComponent indexLabel = new TextComponent(plugin.getLanguageManager().getMessage("label-index"));
         indexLabel.setClickEvent(null);
         indexLabel.setHoverEvent(null);
         indexBuilder.append(indexLabel);
@@ -222,7 +219,8 @@ public class CommandMain extends AbstractModule implements CommandExecutor, TabC
             TextComponent letter = new TextComponent(String.valueOf(c));
             letter.setColor(net.md_5.bungee.api.ChatColor.GOLD);
             letter.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/plf " + c));
-            letter.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("点击显示 " + c + " 开头的插件").create()));
+            letter.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
+                new ComponentBuilder(plugin.getLanguageManager().getMessage("click-to-show", c)).create()));
             indexBuilder.append(letter);
 
             // 添加隔离组件
@@ -249,21 +247,21 @@ public class CommandMain extends AbstractModule implements CommandExecutor, TabC
         }
         
         // 添加右侧边框
-        TextComponent rightBorder = new TextComponent("§8│");
+        TextComponent rightBorder = new TextComponent(plugin.getLanguageManager().getMessage("border-right"));
         rightBorder.setClickEvent(null);
         rightBorder.setHoverEvent(null);
         indexBuilder.append(rightBorder);
         sender.spigot().sendMessage(indexBuilder.create());
         
         // 添加分隔线
-        TextComponent divider = new TextComponent("§8├─────────────────────────────────┤");
+        TextComponent divider = new TextComponent(plugin.getLanguageManager().getMessage("border-middle"));
         divider.setClickEvent(null);
         divider.setHoverEvent(null);
         sender.spigot().sendMessage(divider);
         
         // 第二行：P-Z 和其他选项
         indexBuilder = new ComponentBuilder();
-        indexLabel = new TextComponent("§8│ §a索引§a: ");
+        indexLabel = new TextComponent(plugin.getLanguageManager().getMessage("label-index"));
         indexLabel.setClickEvent(null);
         indexLabel.setHoverEvent(null);
         indexBuilder.append(indexLabel);
@@ -279,7 +277,8 @@ public class CommandMain extends AbstractModule implements CommandExecutor, TabC
             TextComponent letter = new TextComponent(String.valueOf(c));
             letter.setColor(net.md_5.bungee.api.ChatColor.GOLD);
             letter.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/plf " + c));
-            letter.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("点击显示 " + c + " 开头的插件").create()));
+            letter.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
+                new ComponentBuilder(plugin.getLanguageManager().getMessage("click-to-show", c)).create()));
             indexBuilder.append(letter);
 
             // 添加隔离组件
@@ -304,9 +303,10 @@ public class CommandMain extends AbstractModule implements CommandExecutor, TabC
         indexBuilder.append(separator);
         
         // 添加其他选项
-        TextComponent other = new TextComponent(" §8| §e[其他]");
+        TextComponent other = new TextComponent(" §8| " + plugin.getLanguageManager().getMessage("button-other"));
         other.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/plf other"));
-        other.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("点击显示非字母开头的插件").create()));
+        other.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
+            new ComponentBuilder(plugin.getLanguageManager().getMessage("click-to-show-other")).create()));
         indexBuilder.append(other);
         
         // 添加隔离组件
@@ -316,9 +316,10 @@ public class CommandMain extends AbstractModule implements CommandExecutor, TabC
         indexBuilder.append(separator);
         
         // 添加重置按钮
-        TextComponent reset = new TextComponent(" §8| §c[重置]");
+        TextComponent reset = new TextComponent(" §8| " + plugin.getLanguageManager().getMessage("button-reset"));
         reset.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pl"));
-        reset.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("点击显示所有插件").create()));
+        reset.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
+            new ComponentBuilder(plugin.getLanguageManager().getMessage("click-to-show-all")).create()));
         indexBuilder.append(reset);
         
         // 添加右侧空格
@@ -330,14 +331,14 @@ public class CommandMain extends AbstractModule implements CommandExecutor, TabC
         }
         
         // 添加右侧边框
-        rightBorder = new TextComponent("§8│");
+        rightBorder = new TextComponent(plugin.getLanguageManager().getMessage("border-right"));
         rightBorder.setClickEvent(null);
         rightBorder.setHoverEvent(null);
         indexBuilder.append(rightBorder);
         sender.spigot().sendMessage(indexBuilder.create());
         
         // 添加底部边框
-        TextComponent bottomBorder = new TextComponent("§8└─────────────────────────────────┘");
+        TextComponent bottomBorder = new TextComponent(plugin.getLanguageManager().getMessage("border-bottom"));
         bottomBorder.setClickEvent(null);
         bottomBorder.setHoverEvent(null);
         sender.spigot().sendMessage(bottomBorder);

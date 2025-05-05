@@ -3,10 +3,14 @@ package top.cxkcxkckx.plugins;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import top.mrxiaom.pluginbase.BukkitPlugin;
+import top.cxkcxkckx.plugins.func.LanguageManager;
+import top.cxkcxkckx.plugins.func.MessageHelper;
 
 public final class plugins extends BukkitPlugin {
     private static plugins instance;
     private boolean pluginEnabled;
+    private LanguageManager languageManager;
+    private MessageHelper messageHelper;
 
     public plugins() {
         super(options()
@@ -32,15 +36,22 @@ public final class plugins extends BukkitPlugin {
         // 读取配置
         reloadConfig();
         
+        // 初始化语言管理器
+        languageManager = new LanguageManager(this);
+        languageManager.loadLanguages();
+        
+        // 初始化消息助手
+        messageHelper = new MessageHelper(this);
+        
         // 获取插件是否启用
         pluginEnabled = getConfig().getBoolean("enabled", true);
         
         if (!pluginEnabled) {
-            getLogger().info("插件已禁用，如需启用请修改配置文件");
+            getLogger().info(languageManager.getMessage("plugin-disabled"));
             return;
         }
         
-        getLogger().info("BetterPlugins 加载完毕");
+        getLogger().info(languageManager.getMessage("plugin-loaded"));
     }
 
     public static plugins getInstance() {
@@ -49,5 +60,13 @@ public final class plugins extends BukkitPlugin {
     
     public boolean isPluginEnabled() {
         return pluginEnabled;
+    }
+
+    public LanguageManager getLanguageManager() {
+        return languageManager;
+    }
+
+    public MessageHelper getMessageHelper() {
+        return messageHelper;
     }
 }

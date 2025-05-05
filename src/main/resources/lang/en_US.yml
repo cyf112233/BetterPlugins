@@ -1,0 +1,59 @@
+# Plugin Language File - English
+
+# General Messages
+plugin-disabled: "§cPlugin is disabled, please check the configuration file"
+plugin-loaded: "BetterPlugins has been loaded"
+unknown: "Unknown"
+
+# Command Usage
+usage-pl: "§cUsage: /pl [list|reload]"
+usage-plf: "§cUsage: /plf <letter|other>"
+usage-pli: "§cUsage: /pli <plugin name>"
+
+# Plugin List
+plugin-list-title: "§6Installed Plugins:"
+plugin-search-title: "§6Search Results (%s):"
+plugin-filter-title: "§6Filter Results:"
+plugin-not-found: "§cPlugin not found: %s"
+
+# Plugin Information
+plugin-info-title: "§6Plugin Information:"
+plugin-info-name: "§7Name: §f%s"
+plugin-info-version: "§7Version: §f%s"
+plugin-info-author: "§7Author: §f%s"
+plugin-info-description: "§7Description: §f%s"
+plugin-info-status: "§7Status: %s"
+plugin-info-status-enabled: "§aEnabled"
+plugin-info-status-disabled: "§cDisabled"
+
+# Statistics
+plugin-stats: "§7Total Plugins: §f%s §8| §aEnabled: §f%s §8| §cDisabled: §f%s"
+
+# Buttons and Hints
+click-to-view: "§7Click to view plugin information"
+click-to-show: "Click to show plugins starting with %s"
+click-to-show-all: "Click to show all plugins"
+click-to-show-other: "Click to show plugins not starting with letters"
+click-to-enable: "§7Click to enable plugin"
+click-to-disable: "§7Click to disable plugin"
+click-to-reload: "§7Click to reload plugin"
+click-to-back: "§7Click to return to plugin list"
+
+# Button Text
+button-other: "§e[1/#_]"
+button-reset: "§c[all]"
+button-enable: "§a[Enable] "
+button-disable: "§c[Disable] "
+button-reload: "§e[Reload]"
+button-back: "§e[Plugin List]"
+
+# Labels
+label-index: "§8│ §ainit§a: "
+label-manage: "§7Manage: "
+label-back: "§7Back: "
+
+# Borders
+border-top: "§8┌─────────────────────────────────┐"
+border-middle: "§8├─────────────────────────────────┤"
+border-bottom: "§8└─────────────────────────────────┘"
+border-right: "§8│" 

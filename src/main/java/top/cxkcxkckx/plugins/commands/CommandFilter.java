@@ -25,12 +25,12 @@ public class CommandFilter extends AbstractModule implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         // 检查插件是否启用
         if (!plugin.isPluginEnabled()) {
-            sender.sendMessage("§c插件已被禁用，请检查配置文件");
+            plugin.getMessageHelper().sendPluginDisabled(sender);
             return true;
         }
 
         if (args.length < 1) {
-            sender.sendMessage("§c用法: /plf <字母|other>");
+            sender.sendMessage(plugin.getLanguageManager().getMessage("usage-plf"));
             return true;
         }
 
@@ -69,15 +69,15 @@ public class CommandFilter extends AbstractModule implements CommandExecutor {
             sender.sendMessage("");
         }
         
-        sender.sendMessage("§6筛选结果:");
+        sender.sendMessage(plugin.getLanguageManager().getMessage("plugin-filter-title"));
         for (Plugin p : filteredPlugins) {
-            String status = p.isEnabled() ? "§a已启用" : "§c已禁用";
+            String status = plugin.getMessageHelper().getPluginStatus(p.isEnabled());
 
             TextComponent nameComponent = new TextComponent(p.getName());
             nameComponent.setColor(p.isEnabled() ? net.md_5.bungee.api.ChatColor.GREEN : net.md_5.bungee.api.ChatColor.RED);
             nameComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pli " + p.getName()));
             nameComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                new ComponentBuilder("§7点击查看插件信息").create()));
+                new ComponentBuilder(plugin.getLanguageManager().getMessage("click-to-view")).create()));
 
             ComponentBuilder message = new ComponentBuilder("§7- ");
             message.append(nameComponent);
@@ -98,156 +98,99 @@ public class CommandFilter extends AbstractModule implements CommandExecutor {
         }
         
         // 创建插件数量统计消息
-        TextComponent statsText = new TextComponent("§7插件总数: §f" + filteredPlugins.size() + " §8| §a已启用: §f" + enabledCount + " §8| §c已禁用: §f" + disabledCount);
-        statsText.setClickEvent(null);
-        statsText.setHoverEvent(null);
-        sender.spigot().sendMessage(statsText);
+        sender.spigot().sendMessage(plugin.getMessageHelper().getStatsText(
+            filteredPlugins.size(), enabledCount, disabledCount));
 
         // 创建字母索引
         ComponentBuilder indexBuilder = new ComponentBuilder();
         
         // 添加顶部边框
-        TextComponent topBorder = new TextComponent("§8┌─────────────────────────────────┐");
-        topBorder.setClickEvent(null);
-        topBorder.setHoverEvent(null);
-        sender.spigot().sendMessage(topBorder);
+        plugin.getMessageHelper().sendTopBorder(sender);
         
         // 第一行：A-O
-        TextComponent indexLabel = new TextComponent("§8│ §a索引§a: ");
-        indexLabel.setClickEvent(null);
-        indexLabel.setHoverEvent(null);
-        indexBuilder.append(indexLabel);
+        indexBuilder.append(plugin.getMessageHelper().getIndexLabel());
         
         for (char c = 'A'; c <= 'O'; c++) {
             // 添加隔离组件
-            TextComponent separator = new TextComponent("");
-            separator.setClickEvent(null);
-            separator.setHoverEvent(null);
-            indexBuilder.append(separator);
+            indexBuilder.append(plugin.getMessageHelper().getSeparator());
 
             // 添加字母
             TextComponent letter = new TextComponent(String.valueOf(c));
             letter.setColor(net.md_5.bungee.api.ChatColor.GOLD);
             letter.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/plf " + c));
-            letter.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("点击显示 " + c + " 开头的插件").create()));
+            letter.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
+                new ComponentBuilder(plugin.getLanguageManager().getMessage("click-to-show", c)).create()));
             indexBuilder.append(letter);
 
             // 添加隔离组件
-            separator = new TextComponent("");
-            separator.setClickEvent(null);
-            separator.setHoverEvent(null);
-            indexBuilder.append(separator);
+            indexBuilder.append(plugin.getMessageHelper().getSeparator());
 
             // 添加分隔线（除了最后一个字母）
             if (c != 'O') {
-                TextComponent divider = new TextComponent(" §8| ");
-                divider.setClickEvent(null);
-                divider.setHoverEvent(null);
-                indexBuilder.append(divider);
+                indexBuilder.append(plugin.getMessageHelper().getDivider());
             }
         }
         
         // 添加右侧空格
         for (int i = 0; i < 11; i++) {
-            TextComponent space = new TextComponent(" ");
-            space.setClickEvent(null);
-            space.setHoverEvent(null);
-            indexBuilder.append(space);
+            indexBuilder.append(plugin.getMessageHelper().getSpace());
         }
         
         // 添加右侧边框
-        TextComponent rightBorder = new TextComponent("§8│");
-        rightBorder.setClickEvent(null);
-        rightBorder.setHoverEvent(null);
-        indexBuilder.append(rightBorder);
+        indexBuilder.append(plugin.getMessageHelper().getRightBorder());
         sender.spigot().sendMessage(indexBuilder.create());
         
         // 添加分隔线
-        TextComponent divider = new TextComponent("§8├─────────────────────────────────┤");
-        divider.setClickEvent(null);
-        divider.setHoverEvent(null);
-        sender.spigot().sendMessage(divider);
+        plugin.getMessageHelper().sendMiddleBorder(sender);
         
         // 第二行：P-Z 和其他选项
         indexBuilder = new ComponentBuilder();
-        indexLabel = new TextComponent("§8│ §a索引§a: ");
-        indexLabel.setClickEvent(null);
-        indexLabel.setHoverEvent(null);
-        indexBuilder.append(indexLabel);
+        indexBuilder.append(plugin.getMessageHelper().getIndexLabel());
         
         for (char c = 'P'; c <= 'Z'; c++) {
             // 添加隔离组件
-            TextComponent separator = new TextComponent("");
-            separator.setClickEvent(null);
-            separator.setHoverEvent(null);
-            indexBuilder.append(separator);
+            indexBuilder.append(plugin.getMessageHelper().getSeparator());
 
             // 添加字母
             TextComponent letter = new TextComponent(String.valueOf(c));
             letter.setColor(net.md_5.bungee.api.ChatColor.GOLD);
             letter.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/plf " + c));
-            letter.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("点击显示 " + c + " 开头的插件").create()));
+            letter.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
+                new ComponentBuilder(plugin.getLanguageManager().getMessage("click-to-show", c)).create()));
             indexBuilder.append(letter);
 
             // 添加隔离组件
-            separator = new TextComponent("");
-            separator.setClickEvent(null);
-            separator.setHoverEvent(null);
-            indexBuilder.append(separator);
+            indexBuilder.append(plugin.getMessageHelper().getSeparator());
 
             // 添加分隔线（除了最后一个字母）
             if (c != 'Z') {
-                TextComponent divider2 = new TextComponent(" §8| ");
-                divider2.setClickEvent(null);
-                divider2.setHoverEvent(null);
-                indexBuilder.append(divider2);
+                indexBuilder.append(plugin.getMessageHelper().getDivider());
             }
         }
         
         // 添加隔离组件
-        TextComponent separator = new TextComponent("");
-        separator.setClickEvent(null);
-        separator.setHoverEvent(null);
-        indexBuilder.append(separator);
+        indexBuilder.append(plugin.getMessageHelper().getSeparator());
         
         // 添加其他选项
-        TextComponent other = new TextComponent(" §8| §e[其他]");
-        other.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/plf other"));
-        other.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("点击显示非字母开头的插件").create()));
-        indexBuilder.append(other);
+        indexBuilder.append(plugin.getMessageHelper().getOtherButton());
         
         // 添加隔离组件
-        separator = new TextComponent("");
-        separator.setClickEvent(null);
-        separator.setHoverEvent(null);
-        indexBuilder.append(separator);
+        indexBuilder.append(plugin.getMessageHelper().getSeparator());
         
         // 添加重置按钮
-        TextComponent reset = new TextComponent(" §8| §c[重置]");
-        reset.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/pl"));
-        reset.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("点击显示所有插件").create()));
-        indexBuilder.append(reset);
+        indexBuilder.append(plugin.getMessageHelper().getResetButton());
         
         // 添加右侧空格
         for (int i = 0; i < 9; i++) {
-            TextComponent space = new TextComponent(" ");
-            space.setClickEvent(null);
-            space.setHoverEvent(null);
-            indexBuilder.append(space);
+            indexBuilder.append(plugin.getMessageHelper().getSpace());
         }
         
         // 添加右侧边框
-        rightBorder = new TextComponent("§8│");
-        rightBorder.setClickEvent(null);
-        rightBorder.setHoverEvent(null);
-        indexBuilder.append(rightBorder);
+        indexBuilder.append(plugin.getMessageHelper().getRightBorder());
         sender.spigot().sendMessage(indexBuilder.create());
         
         // 添加底部边框
-        TextComponent bottomBorder = new TextComponent("§8└─────────────────────────────────┘");
-        bottomBorder.setClickEvent(null);
-        bottomBorder.setHoverEvent(null);
-        sender.spigot().sendMessage(bottomBorder);
+        plugin.getMessageHelper().sendBottomBorder(sender);
 
         return true;
     }

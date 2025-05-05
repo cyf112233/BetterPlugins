@@ -1,0 +1,59 @@
+# 插件语言文件 - 简体中文
+
+# 通用消息
+plugin-disabled: "§c插件已被禁用，请检查配置文件"
+plugin-loaded: "BetterPlugins 加载完毕"
+unknown: "未知"
+
+# 命令用法
+usage-pl: "§c用法: /pl [list|reload]"
+usage-plf: "§c用法: /plf <字母|other>"
+usage-pli: "§c用法: /pli <插件名>"
+
+# 插件列表
+plugin-list-title: "§6已安装的插件:"
+plugin-search-title: "§6搜索结果 (%s):"
+plugin-filter-title: "§6筛选结果:"
+plugin-not-found: "§c未找到插件: %s"
+
+# 插件信息
+plugin-info-title: "§6插件信息:"
+plugin-info-name: "§7名称: §f%s"
+plugin-info-version: "§7版本: §f%s"
+plugin-info-author: "§7作者: §f%s"
+plugin-info-description: "§7描述: §f%s"
+plugin-info-status: "§7状态: %s"
+plugin-info-status-enabled: "§a已启用"
+plugin-info-status-disabled: "§c已禁用"
+
+# 统计信息
+plugin-stats: "§7插件总数: §f%s §8| §a已启用: §f%s §8| §c已禁用: §f%s"
+
+# 按钮和提示
+click-to-view: "§7点击查看插件信息"
+click-to-show: "点击显示 %s 开头的插件"
+click-to-show-all: "点击显示所有插件"
+click-to-show-other: "点击显示非字母开头的插件"
+click-to-enable: "§7点击启用插件"
+click-to-disable: "§7点击禁用插件"
+click-to-reload: "§7点击重载插件"
+click-to-back: "§7点击返回插件列表"
+
+# 按钮文本
+button-other: "§e[其他]"
+button-reset: "§c[所有]"
+button-enable: "§a[启用] "
+button-disable: "§c[禁用] "
+button-reload: "§e[重载]"
+button-back: "§e[插件列表]"
+
+# 标签
+label-index: "§8│ §a索引§a: "
+label-manage: "§7管理: "
+label-back: "§7返回: "
+
+# 边框
+border-top: "§8┌─────────────────────────────────┐"
+border-middle: "§8├─────────────────────────────────┤"
+border-bottom: "§8└─────────────────────────────────┘"
+border-right: "§8│" 
