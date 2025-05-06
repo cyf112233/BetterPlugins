@@ -20,16 +20,16 @@ public class LanguageManager {
     }
 
     public void loadLanguages() {
-        plugin.getLogger().info("开始加载语言文件...");
+        plugin.getLoggerManager().debug("开始加载语言文件...");
         
         // 清空现有语言文件
         languages.clear();
-        plugin.getLogger().info("已清空语言缓存");
+        plugin.getLoggerManager().debug("已清空语言缓存");
 
         // 从jar中复制默认语言文件
         plugin.saveResource("lang/zh_CN.yml", false);
         plugin.saveResource("lang/en_US.yml", false);
-        plugin.getLogger().info("已复制默认语言文件");
+        plugin.getLoggerManager().debug("已复制默认语言文件");
 
         // 加载所有语言文件
         File langFolder = new File(plugin.getDataFolder(), "lang");
@@ -39,13 +39,13 @@ public class LanguageManager {
                 String langName = file.getName().replace(".yml", "");
                 YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
                 languages.put(langName, config);
-                plugin.getLogger().info("已加载语言文件: " + langName);
+                plugin.getLoggerManager().debug("已加载语言文件: " + langName);
             }
         }
 
         // 从配置文件读取语言设置
         this.currentLanguage = plugin.getConfig().getString("language", "zh_CN");
-        plugin.getLogger().info("从配置文件读取到语言设置: " + currentLanguage);
+        plugin.getLoggerManager().debug("从配置文件读取到语言设置: " + currentLanguage);
         
         setLanguage(currentLanguage);
     }
@@ -53,13 +53,13 @@ public class LanguageManager {
     public void setLanguage(String lang) {
         this.currentLanguage = lang;
         this.currentLang = languages.getOrDefault(lang, languages.get("zh_CN"));
-        plugin.getLogger().info("当前语言已设置为: " + currentLanguage);
-        plugin.getLogger().info("可用的语言文件: " + String.join(", ", languages.keySet()));
+        plugin.getLoggerManager().debug("当前语言已设置为: " + currentLanguage);
+        plugin.getLoggerManager().debug("可用的语言文件: " + String.join(", ", languages.keySet()));
     }
 
     public String getMessage(String path) {
         String message = currentLang.getString(path, "§cMissing message: " + path);
-        plugin.getLogger().info("获取消息: " + path + " -> " + message);
+        plugin.getLoggerManager().debug("获取消息: " + path + " -> " + message);
         return message;
     }
 

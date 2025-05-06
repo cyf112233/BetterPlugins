@@ -5,12 +5,14 @@ import org.jetbrains.annotations.NotNull;
 import top.mrxiaom.pluginbase.BukkitPlugin;
 import top.cxkcxkckx.plugins.func.LanguageManager;
 import top.cxkcxkckx.plugins.func.MessageHelper;
+import top.cxkcxkckx.plugins.func.LoggerManager;
 
 public final class plugins extends BukkitPlugin {
     private static plugins instance;
     private boolean pluginEnabled;
     private LanguageManager languageManager;
     private MessageHelper messageHelper;
+    private LoggerManager loggerManager;
 
     public plugins() {
         super(options()
@@ -36,6 +38,9 @@ public final class plugins extends BukkitPlugin {
         // 读取配置
         reloadConfig();
         
+        // 初始化日志管理器
+        loggerManager = new LoggerManager(this);
+        
         // 初始化语言管理器
         languageManager = new LanguageManager(this);
         languageManager.loadLanguages();
@@ -47,11 +52,19 @@ public final class plugins extends BukkitPlugin {
         pluginEnabled = getConfig().getBoolean("enabled", true);
         
         if (!pluginEnabled) {
-            getLogger().info(languageManager.getMessage("plugin-disabled"));
+            loggerManager.info(languageManager.getMessage("plugin-disabled"));
             return;
         }
         
-        getLogger().info(languageManager.getMessage("plugin-loaded"));
+        loggerManager.info(languageManager.getMessage("plugin-loaded"));
+    }
+
+    @Override
+    public void reloadConfig() {
+        super.reloadConfig();
+        if (loggerManager != null) {
+            loggerManager.reload();
+        }
     }
 
     public static plugins getInstance() {
@@ -68,5 +81,9 @@ public final class plugins extends BukkitPlugin {
 
     public MessageHelper getMessageHelper() {
         return messageHelper;
+    }
+
+    public LoggerManager getLoggerManager() {
+        return loggerManager;
     }
 }
